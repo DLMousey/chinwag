@@ -1,30 +1,48 @@
 import './style.css';
 
-let tempConn;
-let username;
-
-(function() {
-    tempConn = new WebSocket('ws://localhost:8080');
-
-    tempConn.onmessage = (event) => {
-        const metadata = JSON.parse(event.data);
-        if (metadata.msg_type === 'client_list_broadcast') {
-            buildClientList(metadata.data);
-        }
-    }
-})();
+const conn = new WebSocket('ws://localhost:8080');
 
 document.querySelector('#username_form').addEventListener('submit', (event) => {
     console.log('username form submitted');
     event.preventDefault();
-    username = document.querySelector('#username').value;
-    const form = document.querySelector('#username_form');
 
+    const username = document.querySelector('#username').value;
     document.querySelector('.floating_bar').innerHTML = "Chatting as: " + username;
-    form.remove();
+    initUsername(username);
 
-    establishConnection();
+    document.querySelector('#username_form').remove();
 });
+
+conn.onopen = (event) => {
+    if (!localStorage.getItem('ws_identifier')) {
+        conn.send(JSON.stringify({
+            msg_type: 'request_id'
+        }));
+    }
+
+    console.log('on open!', event);
+};
+
+conn.onmessage = (event) => {
+    const metaData = JSON.parse(event.data);
+    switch (metaData.msg_type) {
+        case 'client_list_broadcast':
+            buildClientList(metaData.data);
+            break;
+        case 'message_broadcast':
+            appendMessage(metaData.data);
+            break;
+        case 'response_id':
+            localStorage.setItem('ws_identifier', metaData.value);
+    }
+};
+
+function initUsername(username) {
+    conn.send(JSON.stringify({
+        msg_type: 'username_init',
+        value: username
+    }));
+}
 
 function buildClientList(clients) {
     const list = document.querySelector('.clients__list');
@@ -51,58 +69,25 @@ function buildClientList(clients) {
     });
 }
 
-function establishConnection() {
-    tempConn.close();
-    const connection = new WebSocket('ws://localhost:8080');
+function appendMessage(data) {
+    let li = document.createElement('li');
+    li.classList.add('message');
+    let username = document.createElement('b');
+    username.innerText = data.from;
+    username.classList.add('message__username');
 
-    connection.onopen = () => {
-        connection.send(JSON.stringify({
-            msg_type: 'username_init',
-            value: username
-        }));
-        console.log('onopen event - connection established');
-    };
+    li.innerText = data.value;
+    li.appendChild(username);
 
-    connection.onclose = () => {
-        console.log('onclose event - connection terminated');
-    };
-
-    connection.onerror = (err) => {
-        console.error('onerror event - failed to connect', err);
-    };
-
-    connection.onmessage = (event) => {
-        const metaData = JSON.parse(event.data);
-
-        console.log(metaData);
-        switch (metaData.msg_type) {
-            case 'client_list_broadcast':
-                buildClientList(metaData.data);
-                break;
-            case 'message_broadcast':
-                console.log('message broadcast event!', metaData);
-                let li = document.createElement('li');
-                li.classList.add('message');
-                let username = document.createElement('b');
-                username.innerText = metaData.data.from;
-                username.classList.add('message__username');
-
-                li.innerText = metaData.data.value;
-                li.appendChild(username);
-
-                document.querySelector('.chat__messages').append(li);
-                break;
-        }
-    };
-
-    document.querySelector('form').addEventListener('submit', (event) => {
-        event.preventDefault();
-        let message = document.querySelector('#message').value;
-        connection.send(JSON.stringify({
-           msg_type: 'message_send',
-           value: message
-        }));
-        document.querySelector('#message').value = '';
-    });
+    document.querySelector('.chat__messages').append(li);
 }
 
+document.querySelector('form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    let message = document.querySelector('#message').value;
+    conn.send(JSON.stringify({
+       msg_type: 'message_send',
+       value: message
+    }));
+    document.querySelector('#message').value = '';
+});
