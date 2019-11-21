@@ -3,9 +3,11 @@ const uuid = require('uuid');
 const wss = new WebSocket.Server({ port: 8080 });
 
 wss.on('connection', (ws) => {
-    ws.id = uuid.v4();
+    if (!ws.hasOwnProperty('id')) {
+        ws.id = uuid.v4();
+    }
 
-    ws.send(JSON.stringify({
+    broadcast(JSON.stringify({
         msg_type: 'client_list_broadcast',
         data: buildClientList()
     }));
@@ -14,7 +16,9 @@ wss.on('connection', (ws) => {
         const data = JSON.parse(message);
         switch (data.msg_type) {
             case 'username_init':
-                ws.username = data.value;
+                const clientIndex = wss.clients.findIndex(cli => cli.id === ws.id);
+                wss.clients[clientIndex].username = data.value;
+
                 broadcast(JSON.stringify({
                     msg_type: 'client_list_broadcast',
                     data: buildClientList()
@@ -29,7 +33,20 @@ wss.on('connection', (ws) => {
                     }
                 }));
                 break;
+            case 'request_id':
+                ws.send(JSON.stringify({
+                    msg_type: 'response_id',
+                    value: ws.id
+                }));
+                break;
         }
+    });
+
+    ws.on('close', () => {
+        broadcast(JSON.stringify({
+            msg_type: 'client_list_broadcast',
+            data: buildClientList()
+        }));
     });
 });
 
