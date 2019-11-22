@@ -1,19 +1,16 @@
 import './style.css';
 
 const conn = new WebSocket('ws://localhost:8080');
-// const username = localStorage.getItem('ws_username');
 
-if (!localStorage.getItem('ws_username')) {
-    buildUsernameForm();
-}
-
-document.addEventListener('storage', () => {
+(function() {
     if (localStorage.getItem('ws_username')) {
         buildMessageForm();
     } else {
         buildUsernameForm();
     }
-});
+})();
+
+
 
 conn.onopen = (event) => {
     const username = localStorage.getItem('ws_username');
@@ -23,8 +20,6 @@ conn.onopen = (event) => {
             msg_type: 'username_init',
             value: username
         }));
-
-        buildMessageForm();
     }
 };
 
@@ -41,14 +36,6 @@ conn.onmessage = (event) => {
             localStorage.setItem('ws_identifier', metaData.value);
     }
 };
-
-function initUsername(username) {
-    localStorage.setItem('ws_username', username);
-    conn.send(JSON.stringify({
-        msg_type: 'username_init',
-        value: username
-    }));
-}
 
 function buildClientList(clients) {
     const list = document.querySelector('.clients__list');
@@ -114,7 +101,13 @@ function buildUsernameForm() {
         event.preventDefault();
 
         localStorage.setItem('ws_username', input.value);
+        conn.send(JSON.stringify({
+            msg_type: 'username_init',
+            value: input.value
+        }));
+
         document.querySelector('#username_form').remove();
+        buildMessageForm();
     });
 
     parent.appendChild(form);

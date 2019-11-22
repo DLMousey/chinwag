@@ -57,7 +57,7 @@ ul {
     width: 100%;
 }
 
-.form__message > textarea {
+textarea, input {
     display: block;
     width: 100%;
     appearance: none;
