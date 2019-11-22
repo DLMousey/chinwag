@@ -10,8 +10,6 @@ const conn = new WebSocket('ws://localhost:8080');
     }
 })();
 
-
-
 conn.onopen = (event) => {
     const username = localStorage.getItem('ws_username');
     if (username) {
@@ -21,16 +19,26 @@ conn.onopen = (event) => {
             value: username
         }));
     }
+
+    conn.send(JSON.stringify({
+        msg_type: 'request_resume'
+    }));
 };
 
 conn.onmessage = (event) => {
     const metaData = JSON.parse(event.data);
+    const chatContainer = document.querySelector('.chat');
     switch (metaData.msg_type) {
         case 'client_list_broadcast':
             buildClientList(metaData.data);
             break;
         case 'message_broadcast':
             appendMessage(metaData.data);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            break;
+        case 'respond_resume':
+            buildMessageList(metaData.data)
+            chatContainer.scrollTop = chatContainer.scrollHeight;
             break;
         case 'response_id':
             localStorage.setItem('ws_identifier', metaData.value);
@@ -130,6 +138,15 @@ function buildMessageForm() {
                 value: textarea.value
             }));
 
+            if (textarea.value == "!populate") {
+                for (let i = 0; i < 50; i++) {
+                    conn.send(JSON.stringify({
+                        msg_type: 'message_send',
+                        value: "This is message number: " + i
+                    }));
+                }
+            }
+
             textarea.setSelectionRange(0, 0);
             textarea.value = "";
         }
@@ -140,12 +157,9 @@ function buildMessageForm() {
     parent.appendChild(form);
 }
 
-// document.querySelector('#message_form').addEventListener('submit', (event) => {
-//     event.preventDefault();
-//     let message = document.querySelector('#message').value;
-//     conn.send(JSON.stringify({
-//        msg_type: 'message_send',
-//        value: message
-//     }));
-//     document.querySelector('#message').value = '';
-// });
+function buildMessageList(messages) {
+    for (let i = messages.length - 1; i > 0; i--) {
+        console.log('iteration', i);
+        appendMessage(messages[i]);
+    }
+}

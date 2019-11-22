@@ -46,6 +46,8 @@ ul {
 .chat {
     display: flex;
     flex: 1;
+    max-height: 85vh;
+    overflow-y: scroll;
 }
 
 .form {

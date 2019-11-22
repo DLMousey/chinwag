@@ -2,6 +2,8 @@ const WebSocket = require('ws');
 const uuid = require('uuid');
 const wss = new WebSocket.Server({ port: 8080 });
 
+let last50 = [];
+
 wss.on('connection', (ws) => {
     if (!ws.hasOwnProperty('id')) {
         ws.id = uuid.v4();
@@ -23,6 +25,12 @@ wss.on('connection', (ws) => {
                 }));
                 break;
             case 'message_send':
+                if (last50.length < 50) {
+                    last50.unshift({ value: data.value, from: ws.username || 'Anonymous' });
+                } else {
+                    last50 = last50.slice(0, 49);
+                }
+
                 broadcast(JSON.stringify({
                     msg_type: 'message_broadcast',
                     data: {
@@ -35,6 +43,12 @@ wss.on('connection', (ws) => {
                 ws.send(JSON.stringify({
                     msg_type: 'response_id',
                     value: ws.id
+                }));
+                break;
+            case 'request_resume':
+                ws.send(JSON.stringify({
+                    msg_type: 'respond_resume',
+                    data: last50
                 }));
                 break;
         }
