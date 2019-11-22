@@ -16,9 +16,7 @@ wss.on('connection', (ws) => {
         const data = JSON.parse(message);
         switch (data.msg_type) {
             case 'username_init':
-                const clientIndex = wss.clients.findIndex(cli => cli.id === ws.id);
-                wss.clients[clientIndex].username = data.value;
-
+                ws.username = data.value;
                 broadcast(JSON.stringify({
                     msg_type: 'client_list_broadcast',
                     data: buildClientList()
