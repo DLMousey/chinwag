@@ -1,9 +1,21 @@
+/* This one will make imfunnie happy */
+@import url('https://fonts.googleapis.com/css?family=Lexend+Deca&display=swap');
+
 * {
     box-sizing: border-box;
 }
 
 html {
-    background: #FEFEFE;
+    background: #090a14;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    color: #EBEBEB;
+    font-family: 'Lexend Deca', sans-serif;
 }
 
 ul {
@@ -14,32 +26,83 @@ ul {
 
 .container {
     display: flex;
+    flex-direction: column;
+    height: 100%;
     flex: 1;
-    border: 1px solid red;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
 }
 
 .clients {
     display: flex;
     flex: 0.25;
-    flex-direction: column;
-    border: 1px solid green;
+    background: #15151c;
 }
+
+.chat {
+    display: flex;
+    flex: 1;
+}
+
+.form {
+    display: flex;
+}
+
+.form__message {
+    display: flex;
+    width: 100%;
+}
+
+.form__message > textarea {
+    display: block;
+    width: 100%;
+    appearance: none;
+    resize: none;
+    padding: 16px;
+    background: #0a080f;
+    border-top: 2px solid #100d19;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    color: #EBEBEB;
+    transition: border-color 0.2s ease;
+    font-family: 'Lexend Deca', sans-serif;
+}
+
+.form__message > textarea:focus {
+    border-color: #201a33;
+}
+
 
 .client {
     display: block;
     width: 100%;
-    border-bottom: 1px solid #EBEBEB;
-    margin-bottom: 6px;
+    border-bottom: 1px solid #201a33;
+    padding: 16px 8px;
+}
+
+.clients__list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
 
 .client__id, .client__username {
     display: block;
+    width: 100%;
+}
+
+.client__id {
+    color: #333;
 }
 
 .chat {
     display: flex;
     flex-direction: column;
-    border: 1px solid orange;
 }
 
 .floating_bar {
@@ -56,11 +119,11 @@ ul {
 }
 
 .message {
-    display: block;
+    display: flex;
+    flex-direction: column-reverse;
     width: 100%;
     padding: 16px;
-    background: #EBEBEB;
-    border: 1px solid #EFEFEF;
+    border-bottom: 3px solid #201a33;
 }
 
 .message__username {
